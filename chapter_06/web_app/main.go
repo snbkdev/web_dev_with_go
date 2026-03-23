@@ -4,6 +4,7 @@ import (
 	"log"
 	"web_app/config"
 	"web_app/server"
+	_ "github.com/lib/pq"
 )
 
 func main() {

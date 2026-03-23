@@ -72,7 +72,7 @@ func (rs RunnersService) GetRunner(runnerId string) (*models.Runner, *models.Res
 }
 
 func (rs RunnersService) GetRunnerBatch(country string, year string) ([]*models.Runner, *models.ResponseError) {
-	if cpuntry != "" && year != "" {
+	if country != "" && year != "" {
 		return nil, &models.ResponseError{
 			Message: "Only one parameter can be passed",
 			Status: http.StatusBadRequest,

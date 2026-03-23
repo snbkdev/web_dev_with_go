@@ -3,6 +3,9 @@ package server
 import (
 	"database/sql"
 	"log"
+	"web_app/repositories"
+	"web_app/services"
+	"web_app/controllers"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
@@ -11,6 +14,8 @@ import (
 type HttpServer struct {
 	config *viper.Viper
 	router *gin.Engine
+	runnersController *controllers.RunnersController
+	resultsController *controllers.ResultsController
 }
 
 func InitHttpServer(config *viper.Viper, dbHandler *sql.DB) HttpServer {
@@ -26,14 +31,14 @@ func InitHttpServer(config *viper.Viper, dbHandler *sql.DB) HttpServer {
 	router.PUT("/runner", runnersController.UpdateRunner)
 	router.DELETE("/runner/:id", runnersController.DeleteRunner)
 	router.GET("/runner/:id", runnersController.GetRunner)
-	router.GET("/runner/", runnersController.GetRunnersBatch)
+	router.GET("/runner/", runnersController.GetRunnerBatch)
 	router.POST("/result", resultsController.CreateResult)
 	router.DELETE("/result/:id", resultsController.DeleteResult)
 	return HttpServer{
 		config: config,
 		router: router,
-		// runnersController: runnersController,
-		// resultsController: resultsController,
+		runnersController: runnersController,
+		resultsController: resultsController,
 	}
 }
 

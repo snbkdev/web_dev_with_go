@@ -11,17 +11,33 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const ROLE_ADMIN = "admin"
+const ROLE_RUNNER = "runner"
+
 type RunnersController struct {
 	runnersService *services.RunnersService
+	usersService *services.UsersService
 }
 
-func NewRunnersController(runnersService *services.RunnersService) *RunnersController {
+func NewRunnersController(runnersService *services.RunnersService, usersService *services.UsersService) *RunnersController {
 	return &RunnersController{
 		runnersService: runnersService,
+		usersService: usersService,
 	}
 }
 
 func (rh RunnersController) CreateRunner(ctx *gin.Context) {
+	accessToken := ctx.Request.Header.Get("Token")
+	auth, responseErr := rh.usersService.AuthorizeUser(accessToken, []string{ROLE_ADMIN, ROLE_RUNNER})
+	if responseErr != nil {
+		ctx.JSON(responseErr.Status, responseErr)
+		return
+	}
+	if !auth {
+		ctx.Status(http.StatusUnauthorized)
+		return
+	}
+
 	body, err := io.ReadAll(ctx.Request.Body)
 	if err != nil {
 		log.Println("Error while reading create runner body", err)

@@ -22,11 +22,13 @@ type HttpServer struct {
 func InitHttpServer(config *viper.Viper, dbHandler *sql.DB) HttpServer {
 	runnersRepository := repositories.NewRunnersRepository(dbHandler)
 	resultRepository := repositories.NewResultsRepository(dbHandler)
+	usersRepository := repositories.NewUsersRepository(dbHandler)
 	runnersService := services.NewRunnersService(runnersRepository, resultRepository)
 	resultsService := services.NewResultsService(resultRepository, runnersRepository)
-	runnersController := controllers.NewRunnersController(runnersService)
-	resultsController := controllers.NewResultsController(resultsService)
-	usersController := controllers.NewResultsController(resultsService, usersService)
+	usersService := services.NewUsersService(usersRepository)
+	runnersController := controllers.NewRunnersController(runnersService, usersService)
+	resultsController := controllers.NewResultsController(resultsService, usersService)
+	usersController := controllers.NewUsersController(usersService)
 
 	router := gin.Default()
 	router.POST("/runner", runnersController.CreateRunner)

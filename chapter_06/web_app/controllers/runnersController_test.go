@@ -18,7 +18,7 @@ import (
 func initTestRouter(dbHandler *sql.DB) *gin.Engine {
 	runnersRepository := repositories.NewRunnersRepository(dbHandler)
 	runnersService := services.NewRunnersService(runnersRepository, nil)
-	runnersController := NewRunnersController(runnersService)
+	runnersController := NewRunnersController(runnersService, nil)
 	router := gin.Default()
 	router.GET("/runner", runnersController.GetRunnerBatch)
 	return router

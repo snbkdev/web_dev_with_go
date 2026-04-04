@@ -5,10 +5,13 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
+	"web_app/metrics"
 	"web_app/models"
 	"web_app/services"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const ROLE_ADMIN = "admin"
@@ -97,14 +100,31 @@ func (rh RunnersController) DeleteRunner(ctx *gin.Context) {
 	ctx.Status(http.StatusNoContent)
 }
 
-func (rh RunnersController) GetRunner(ctx *gin.Context) {
-	runnerId := ctx.Param("id")
-	response, responseErr := rh.runnersService.GetRunner(runnerId)
+func (rc RunnersController) GetRunner(ctx *gin.Context) {
+	metrics.HttpRequestsCounter.Inc()
+	accessToken := ctx.Request.Header.Get("Token")
+	auth, responseErr := rc.usersService.AuthorizeUser(accessToken, []string{ROLE_ADMIN, ROLE_RUNNER})
 	if responseErr != nil {
+		metrics.GetRunnerHttpResponsesCounter.WithLabelValues(strconv.Itoa(responseErr.Status)).Inc()
 		ctx.JSON(responseErr.Status, responseErr)
 		return
 	}
 
+	if !auth {
+		metrics.GetRunnerHttpResponsesCounter.WithLabelValues("401").Inc()
+		ctx.Status(http.StatusUnauthorized)
+		return
+	}
+
+	runnerId := ctx.Param("id")
+	response, responseErr := rc.runnersService.GetRunner(runnerId)
+	if responseErr != nil {
+		metrics.GetRunnerHttpResponsesCounter.WithLabelValues(strconv.Itoa(responseErr.Status)).Inc()
+		ctx.JSON(responseErr.Status, responseErr)
+		return
+	}
+
+	metrics.GetRunnerHttpResponsesCounter.WithLabelValues("200").Inc()
 	ctx.JSON(http.StatusOK, response)
 }
 
@@ -119,4 +139,13 @@ func (rh RunnersController) GetRunnerBatch(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, response)
+
+	timer := prometheus.NewTimer(
+		prometheus.ObserverFunc(func(f float64) {
+			metrics.GetAllRunnersTimer.Observe(f)
+		}))
+	
+	defer func() {
+		timer.ObserveDuration()
+	}()
 }

@@ -1,0 +1,7 @@
+version: "3"
+
+services:
+  runners-app:
+    image: runners-app:latest
+    ports:
+     - 8080:8080
